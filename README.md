@@ -62,9 +62,7 @@ import {
   IsFiles,
   SuccessResponse,
   UseMulter,
-  BodyMultipart,
-  OutputSuccessOrFailDTO,
-  successOrFailResponse,
+  BodyMultipart  
 } from "routing-controllers-openapi-extra";
 import { IsString } from "class-validator";
 import { Service } from "typedi";
