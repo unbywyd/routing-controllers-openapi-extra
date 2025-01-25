@@ -16,8 +16,8 @@ export function parseFileSize(value: string | number): number {
 }
 
 export interface FileFieldOptions {
-    fieldName?: string;
-    required?: boolean;
+    name?: string;
+    isRequired?: boolean;
     maxSize?: string;
     minSize?: string;
     maxFiles?: number;
@@ -62,7 +62,7 @@ function getFileFieldsMetadata(dtoClass: Function): FileFieldMetadata[] {
 export function IsFile(options: FileFieldOptions = {}): PropertyDecorator {
     return (target, propertyKey) => {
         storeFileFieldMetadata(target, propertyKey as string, false, options);
-        if (!options.required) {
+        if (!options.isRequired) {
             IsOptional()(target, propertyKey);
         } else {
             IsDefined()(target, propertyKey);
@@ -82,7 +82,7 @@ export function IsFile(options: FileFieldOptions = {}): PropertyDecorator {
 export function IsFiles(options: FileFieldOptions = {}): PropertyDecorator {
     return (target, propertyKey) => {
         storeFileFieldMetadata(target, propertyKey as string, true, options);
-        if (!options.required) {
+        if (!options.isRequired) {
             IsOptional()(target, propertyKey);
         } else {
             IsDefined()(target, propertyKey);
@@ -122,8 +122,8 @@ export function BodyMultipart<T>(type?: { new(): T }): ParameterDecorator {
 
 function generateFileDescription(options: FileFieldOptions, isArray: boolean): string {
     let description = `Upload ${isArray ? "multiple files" : "a file"}`;
-    if (options.fieldName) {
-        description += ` under the key '${options.fieldName}'.`;
+    if (options.name) {
+        description += ` under the key '${options.name}'.`;
     }
     if (options.mimeTypes && options.mimeTypes.length > 0) {
         const allowedTypes = options.mimeTypes.map((regex) => regex.toString()).join(", ");
@@ -153,7 +153,7 @@ export function UseMulter(dtoClass: Function) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         const fileFields: FileFieldMetadata[] = getFileFieldsMetadata(dtoClass);
         const multerFields = fileFields.map((meta) => {
-            const fieldName = meta.options.fieldName || meta.propertyKey;
+            const fieldName = meta.options.name || meta.propertyKey;
             const maxCount = meta.isArray ? (meta.options.maxFiles ?? 99) : 1;
             return { name: fieldName, maxCount };
         });
@@ -164,11 +164,11 @@ export function UseMulter(dtoClass: Function) {
                 if (!req.files) return next();
 
                 for (const meta of fileFields) {
-                    const fieldName = meta.options.fieldName || meta.propertyKey;
+                    const fieldName = meta.options.name || meta.propertyKey;
                     const files = (req.files as any)[fieldName] as Express.Multer.File[] | undefined;
 
                     if (!files || files.length === 0) {
-                        if (meta.options.required) {
+                        if (meta.options.isRequired) {
                             return next(new Error(`No files uploaded for field: ${fieldName}`));
                         } else {
                             if (meta.isArray) {
@@ -196,7 +196,7 @@ export function UseMulter(dtoClass: Function) {
                             );
                         }
                     } else {
-                        if (meta?.options?.required && files.length === 0) {
+                        if (meta?.options?.isRequired && files.length === 0) {
                             return next(new Error(`No files uploaded for field: ${fieldName}`));
                         } else if (files?.length) {
                             (req.files as any)[fieldName] = files[0];
@@ -263,7 +263,7 @@ export function UseMulter(dtoClass: Function) {
             }
 
             for (const meta of fileFields) {
-                const fieldName = meta.options.fieldName || meta.propertyKey;
+                const fieldName = meta.options.name || meta.propertyKey;
                 if (meta.isArray) {
                     dtoSchema.properties[fieldName] = {
                         type: "array",

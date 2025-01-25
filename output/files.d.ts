@@ -1,7 +1,7 @@
 export declare function parseFileSize(value: string | number): number;
 export interface FileFieldOptions {
-    fieldName?: string;
-    required?: boolean;
+    name?: string;
+    isRequired?: boolean;
     maxSize?: string;
     minSize?: string;
     maxFiles?: number;

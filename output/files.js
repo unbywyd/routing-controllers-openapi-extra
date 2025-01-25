@@ -40,7 +40,7 @@ function getFileFieldsMetadata(dtoClass) {
 function IsFile(options = {}) {
     return (target, propertyKey) => {
         storeFileFieldMetadata(target, propertyKey, false, options);
-        if (!options.required) {
+        if (!options.isRequired) {
             (0, class_validator_1.IsOptional)()(target, propertyKey);
         }
         else {
@@ -60,7 +60,7 @@ function IsFile(options = {}) {
 function IsFiles(options = {}) {
     return (target, propertyKey) => {
         storeFileFieldMetadata(target, propertyKey, true, options);
-        if (!options.required) {
+        if (!options.isRequired) {
             (0, class_validator_1.IsOptional)()(target, propertyKey);
         }
         else {
@@ -96,8 +96,8 @@ function BodyMultipart(type) {
 }
 function generateFileDescription(options, isArray) {
     let description = `Upload ${isArray ? "multiple files" : "a file"}`;
-    if (options.fieldName) {
-        description += ` under the key '${options.fieldName}'.`;
+    if (options.name) {
+        description += ` under the key '${options.name}'.`;
     }
     if (options.mimeTypes && options.mimeTypes.length > 0) {
         const allowedTypes = options.mimeTypes.map((regex) => regex.toString()).join(", ");
@@ -125,7 +125,7 @@ function UseMulter(dtoClass) {
     return function (target, propertyKey, descriptor) {
         const fileFields = getFileFieldsMetadata(dtoClass);
         const multerFields = fileFields.map((meta) => {
-            const fieldName = meta.options.fieldName || meta.propertyKey;
+            const fieldName = meta.options.name || meta.propertyKey;
             const maxCount = meta.isArray ? (meta.options.maxFiles ?? 99) : 1;
             return { name: fieldName, maxCount };
         });
@@ -136,10 +136,10 @@ function UseMulter(dtoClass) {
                 if (!req.files)
                     return next();
                 for (const meta of fileFields) {
-                    const fieldName = meta.options.fieldName || meta.propertyKey;
+                    const fieldName = meta.options.name || meta.propertyKey;
                     const files = req.files[fieldName];
                     if (!files || files.length === 0) {
-                        if (meta.options.required) {
+                        if (meta.options.isRequired) {
                             return next(new Error(`No files uploaded for field: ${fieldName}`));
                         }
                         else {
@@ -161,7 +161,7 @@ function UseMulter(dtoClass) {
                         }
                     }
                     else {
-                        if (meta?.options?.required && files.length === 0) {
+                        if (meta?.options?.isRequired && files.length === 0) {
                             return next(new Error(`No files uploaded for field: ${fieldName}`));
                         }
                         else if (files?.length) {
@@ -209,7 +209,7 @@ function UseMulter(dtoClass) {
                 dtoSchema.properties = {};
             }
             for (const meta of fileFields) {
-                const fieldName = meta.options.fieldName || meta.propertyKey;
+                const fieldName = meta.options.name || meta.propertyKey;
                 if (meta.isArray) {
                     dtoSchema.properties[fieldName] = {
                         type: "array",

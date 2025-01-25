@@ -1,7 +1,7 @@
 {
   "name": "routing-controllers-openapi-extra",
   "description": "Custom OpenAPI decorators and utilities for routing-controllers",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "output/index.js",
   "scripts": {
     "start": "tsc"
