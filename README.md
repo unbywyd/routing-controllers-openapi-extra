@@ -56,32 +56,48 @@ npm install routing-controllers-openapi-extra
 ## Basic Example
 
 ```ts
-import { JsonController, Post, Body, CurrentUser } from "routing-controllers";
+import { Expose } from "class-transformer";
 import {
-  UseJsonBody,
-  SuccessResponse,
   Summary,
-  IsEntity,
+  IsFiles,
+  SuccessResponse,
   UseMulter,
-  IsFile,
-  FileFieldOptions,
+  BodyMultipart,
+  OutputSuccessOrFailDTO,
+  successOrFailResponse,
 } from "routing-controllers-openapi-extra";
+import { IsString } from "class-validator";
+import { Service } from "typedi";
+import { OpenAPI } from "routing-controllers-openapi";
+import FilesService from "./files.service";
 
-class UploadDto {
-  @IsFile({ fieldName: "myFile", required: true } as FileFieldOptions)
-  myFile: Express.Multer.File;
+export class InputFilesDTO {
+  @IsFiles({
+    maxFiles: 5,
+    maxSize: "5MB",
+  })
+  @Expose()
+  files: Express.Multer.File[];
+
+  @Expose()
+  @IsString()
+  otherKey: string;
 }
 
-@JsonController()
-export class MyController {
-  @Post("/upload")
-  @Summary("Upload a single file")
-  @UseMulter(UploadDto)
-  @UseJsonBody()
-  @SuccessResponse(UploadDto)
-  uploadFile(@Body() body: UploadDto) {
-    // 'body.myFile' contains the uploaded file
-    return body;
+@Service()
+@OpenAPI({
+  tags: ["Files"],
+})
+@JsonController("/files")
+export class FilesController {
+  public constructor(private filesService: FilesService) {}
+
+  @Summary("Upload public files")
+  @SuccessResponse(UploadFileResponseDTO, { isArray: true })
+  @Post("/upload/public")
+  @UseMulter(InputFilesDTO)
+  public async uploadPublicFiles(@BodyMultipart() data: InputFilesDTO) {
+    return this.filesService.uploadFiles(data.files);
   }
 }
 ```

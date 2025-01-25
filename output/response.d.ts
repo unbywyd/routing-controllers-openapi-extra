@@ -1,5 +1,5 @@
 export declare function getOpenAPIResponse<T>(responseClass: new () => T, options?: {
-    each?: boolean;
+    isArray?: boolean;
 }): {
     "400": {
         description: string;
@@ -47,7 +47,7 @@ export declare class OutputSuccessOrFailDTO {
 export declare function successOrFailResponse(success: boolean): OutputSuccessOrFailDTO;
 export declare function Summary(summary: string): (...args: [Function] | [object, string, PropertyDescriptor]) => void;
 export declare function SuccessResponse<T>(responseClass: new () => T, options?: {
-    each?: boolean;
+    isArray?: boolean;
 }): (target: any, propertyKey?: string, descriptor?: PropertyDescriptor) => void;
 export declare function responseError(message: string | Error, status?: number): IResponseError;
 export declare function responseSuccess<T>(data: T): APIResponse<T>;

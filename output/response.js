@@ -23,7 +23,7 @@ const routing_controllers_openapi_1 = require("routing-controllers-openapi");
 const utils_1 = require("./utils");
 const decorators_1 = require("./decorators");
 function getOpenAPIResponse(responseClass, options) {
-    const isArray = options?.each || false;
+    const isArray = options?.isArray || false;
     const schemas = (0, class_validator_jsonschema_1.validationMetadatasToSchemas)({
         refPointerPrefix: "#/components/schemas/",
     });

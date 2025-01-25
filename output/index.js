@@ -18,4 +18,5 @@ require("reflect-metadata");
 __exportStar(require("./decorators"), exports);
 __exportStar(require("./response"), exports);
 __exportStar(require("./utils"), exports);
+__exportStar(require("./files"), exports);
 //# sourceMappingURL=index.js.map
