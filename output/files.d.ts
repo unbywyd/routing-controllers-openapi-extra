@@ -6,7 +6,7 @@ export interface FileFieldOptions {
     minSize?: string;
     maxFiles?: number;
     minFiles?: number;
-    mimeTypes?: RegExp[];
+    mimeTypes?: RegExp[] | string[];
 }
 /**
  * Metadata for a single file field.

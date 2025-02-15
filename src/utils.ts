@@ -1,5 +1,5 @@
 
-import { plainToClass } from "class-transformer";
+import { Expose, plainToClass } from "class-transformer";
 
 type EnumLike = Array<unknown> | Record<string, unknown>;
 type Constructor<T> = new () => T;

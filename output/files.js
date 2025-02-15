@@ -182,11 +182,12 @@ function UseMulter(dtoClass) {
                             }
                         }
                         if (meta.options.mimeTypes && meta.options.mimeTypes.length > 0) {
-                            const matched = meta.options.mimeTypes.some((regex) => regex.test(file.mimetype));
+                            const matched = meta.options.mimeTypes.some((item) => {
+                                const regex = item instanceof RegExp ? item : new RegExp(item); // Преобразуем строку в RegExp, если нужно
+                                return regex.test(file.mimetype);
+                            });
                             if (!matched) {
-                                return next(new Error(`File ${file.originalname} has invalid type (${file.mimetype}). Allowed: ${meta.options.mimeTypes
-                                    .map((r) => r.toString())
-                                    .join(", ")}.`));
+                                return next(new Error(`File ${file.originalname} has invalid type (${file.mimetype}). Allowed: ${meta.options.mimeTypes.map((item) => (item instanceof RegExp ? item.toString() : new RegExp(item).toString())).join(", ")}.`));
                             }
                         }
                     }
