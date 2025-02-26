@@ -51,6 +51,18 @@ function IsFile(options = {}) {
             format: "binary",
             description: generateFileDescription(options, false),
         };
+        if (options.maxSize) {
+            schema['x-maxSize'] = options.maxSize;
+        }
+        if (options.minSize) {
+            schema['x-minSize'] = options.minSize;
+        }
+        if (options.mimeTypes) {
+            schema['x-mimeTypes'] = options.mimeTypes?.map((item) => (item instanceof RegExp ? item.toString() : new RegExp(item).toString()));
+        }
+        if (options.name) {
+            schema['x-fieldName'] = options.name;
+        }
         (0, class_validator_jsonschema_1.JSONSchema)(schema)(target, propertyKey);
     };
 }
@@ -75,6 +87,24 @@ function IsFiles(options = {}) {
                 format: "binary",
             },
         };
+        if (typeof options.maxFiles === 'number') {
+            schema.maxItems = options.maxFiles;
+        }
+        if (typeof options.minFiles === 'number') {
+            schema.minItems = options.minFiles;
+        }
+        if (options.maxSize) {
+            schema['x-maxSize'] = options.maxSize;
+        }
+        if (options.minSize) {
+            schema['x-minSize'] = options.minSize;
+        }
+        if (options.mimeTypes) {
+            schema['x-mimeTypes'] = options.mimeTypes?.map((item) => (item instanceof RegExp ? item.toString() : new RegExp(item).toString()));
+        }
+        if (options.name) {
+            schema['x-fieldName'] = options.name;
+        }
         (0, class_validator_jsonschema_1.JSONSchema)(schema)(target, propertyKey);
     };
 }
@@ -140,7 +170,7 @@ function UseMulter(dtoClass) {
                     const files = req.files[fieldName];
                     if (!files || files.length === 0) {
                         if (meta.options.isRequired) {
-                            return next(new Error(`No files uploaded for field: ${fieldName}`));
+                            return next(new routing_controllers_1.BadRequestError(`No files uploaded for field: ${fieldName}`));
                         }
                         else {
                             if (meta.isArray) {
@@ -154,15 +184,15 @@ function UseMulter(dtoClass) {
                     }
                     if (meta.isArray) {
                         if (meta.options.minFiles && files.length < meta.options.minFiles) {
-                            return next(new Error(`Too few files uploaded for '${fieldName}'. Minimum number: ${meta.options.minFiles}.`));
+                            return next(new routing_controllers_1.BadRequestError(`Too few files uploaded for '${fieldName}'. Minimum number: ${meta.options.minFiles}.`));
                         }
                         if (meta.options.maxFiles && files.length > meta.options.maxFiles) {
-                            return next(new Error(`Too many files uploaded for '${fieldName}'. Maximum number: ${meta.options.maxFiles}.`));
+                            return next(new routing_controllers_1.BadRequestError(`Too many files uploaded for '${fieldName}'. Maximum number: ${meta.options.maxFiles}.`));
                         }
                     }
                     else {
                         if (meta?.options?.isRequired && files.length === 0) {
-                            return next(new Error(`No files uploaded for field: ${fieldName}`));
+                            return next(new routing_controllers_1.BadRequestError(`No files uploaded for field: ${fieldName}`));
                         }
                         else if (files?.length) {
                             req.files[fieldName] = files[0];
@@ -172,13 +202,13 @@ function UseMulter(dtoClass) {
                         if (meta.options.minSize) {
                             const minSizeBytes = parseFileSize(meta.options.minSize);
                             if (file.size < minSizeBytes) {
-                                return next(new Error(`File ${file.originalname} is too small. Minimum size is ${meta.options.minSize}.`));
+                                return next(new routing_controllers_1.BadRequestError(`File ${file.originalname} is too small. Minimum size is ${meta.options.minSize}.`));
                             }
                         }
                         if (meta.options.maxSize) {
                             const maxSizeBytes = parseFileSize(meta.options.maxSize);
                             if (file.size > maxSizeBytes) {
-                                return next(new Error(`File ${file.originalname} is too large. Maximum size is ${meta.options.maxSize}.`));
+                                return next(new routing_controllers_1.BadRequestError(`File ${file.originalname} is too large. Maximum size is ${meta.options.maxSize}.`));
                             }
                         }
                         if (meta.options.mimeTypes && meta.options.mimeTypes.length > 0) {
@@ -187,7 +217,7 @@ function UseMulter(dtoClass) {
                                 return regex.test(file.mimetype);
                             });
                             if (!matched) {
-                                return next(new Error(`File ${file.originalname} has invalid type (${file.mimetype}). Allowed: ${meta.options.mimeTypes.map((item) => (item instanceof RegExp ? item.toString() : new RegExp(item).toString())).join(", ")}.`));
+                                return next(new routing_controllers_1.BadRequestError(`File ${file.originalname} has invalid type (${file.mimetype}). Allowed: ${meta.options.mimeTypes.map((item) => (item instanceof RegExp ? item.toString() : new RegExp(item).toString())).join(", ")}.`));
                             }
                         }
                     }

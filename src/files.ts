@@ -2,7 +2,7 @@
 import { IsArray, IsDefined, IsOptional } from "class-validator";
 import { validationMetadatasToSchemas, JSONSchema } from "class-validator-jsonschema";
 import { NextFunction, Request, Response } from "express";
-import { createParamDecorator, UseBefore } from "routing-controllers";
+import { BadRequestError, createParamDecorator, UseBefore } from "routing-controllers";
 import multer from "multer";
 import bytes from "bytes";
 import { OpenAPI } from "routing-controllers-openapi";
@@ -72,6 +72,18 @@ export function IsFile(options: FileFieldOptions = {}): PropertyDecorator {
             format: "binary",
             description: generateFileDescription(options, false),
         };
+        if (options.maxSize) {
+            schema['x-maxSize'] = options.maxSize;
+        }
+        if (options.minSize) {
+            schema['x-minSize'] = options.minSize;
+        }
+        if (options.mimeTypes) {
+            schema['x-mimeTypes'] = options.mimeTypes?.map((item) => (item instanceof RegExp ? item.toString() : new RegExp(item).toString()));
+        }
+        if (options.name) {
+            schema['x-fieldName'] = options.name;
+        }
         JSONSchema(schema)(target, propertyKey as string);
     };
 }
@@ -97,6 +109,27 @@ export function IsFiles(options: FileFieldOptions = {}): PropertyDecorator {
                 format: "binary",
             },
         };
+
+        if (typeof options.maxFiles === 'number') {
+            schema.maxItems = options.maxFiles;
+        }
+        if (typeof options.minFiles === 'number') {
+            schema.minItems = options.minFiles;
+        }
+
+        if (options.maxSize) {
+            schema['x-maxSize'] = options.maxSize;
+        }
+        if (options.minSize) {
+            schema['x-minSize'] = options.minSize;
+        }
+        if (options.mimeTypes) {
+            schema['x-mimeTypes'] = options.mimeTypes?.map((item) => (item instanceof RegExp ? item.toString() : new RegExp(item).toString()));
+        }
+        if (options.name) {
+            schema['x-fieldName'] = options.name;
+        }
+
         JSONSchema(schema)(target, propertyKey as string);
     };
 }
@@ -169,7 +202,7 @@ export function UseMulter(dtoClass: Function) {
 
                     if (!files || files.length === 0) {
                         if (meta.options.isRequired) {
-                            return next(new Error(`No files uploaded for field: ${fieldName}`));
+                            return next(new BadRequestError(`No files uploaded for field: ${fieldName}`));
                         } else {
                             if (meta.isArray) {
                                 (req.files as any)[fieldName] = [];
@@ -183,21 +216,21 @@ export function UseMulter(dtoClass: Function) {
                     if (meta.isArray) {
                         if (meta.options.minFiles && files.length < meta.options.minFiles) {
                             return next(
-                                new Error(
+                                new BadRequestError(
                                     `Too few files uploaded for '${fieldName}'. Minimum number: ${meta.options.minFiles}.`
                                 )
                             );
                         }
                         if (meta.options.maxFiles && files.length > meta.options.maxFiles) {
                             return next(
-                                new Error(
+                                new BadRequestError(
                                     `Too many files uploaded for '${fieldName}'. Maximum number: ${meta.options.maxFiles}.`
                                 )
                             );
                         }
                     } else {
                         if (meta?.options?.isRequired && files.length === 0) {
-                            return next(new Error(`No files uploaded for field: ${fieldName}`));
+                            return next(new BadRequestError(`No files uploaded for field: ${fieldName}`));
                         } else if (files?.length) {
                             (req.files as any)[fieldName] = files[0];
                         }
@@ -208,7 +241,7 @@ export function UseMulter(dtoClass: Function) {
                             const minSizeBytes = parseFileSize(meta.options.minSize);
                             if (file.size < minSizeBytes) {
                                 return next(
-                                    new Error(
+                                    new BadRequestError(
                                         `File ${file.originalname} is too small. Minimum size is ${meta.options.minSize}.`
                                     )
                                 );
@@ -218,7 +251,7 @@ export function UseMulter(dtoClass: Function) {
                             const maxSizeBytes = parseFileSize(meta.options.maxSize);
                             if (file.size > maxSizeBytes) {
                                 return next(
-                                    new Error(
+                                    new BadRequestError(
                                         `File ${file.originalname} is too large. Maximum size is ${meta.options.maxSize}.`
                                     )
                                 );
@@ -231,7 +264,7 @@ export function UseMulter(dtoClass: Function) {
                             });
 
                             if (!matched) {
-                                return next(new Error(`File ${file.originalname} has invalid type (${file.mimetype}). Allowed: ${meta.options.mimeTypes.map((item) => (item instanceof RegExp ? item.toString() : new RegExp(item).toString())).join(", ")
+                                return next(new BadRequestError(`File ${file.originalname} has invalid type (${file.mimetype}). Allowed: ${meta.options.mimeTypes.map((item) => (item instanceof RegExp ? item.toString() : new RegExp(item).toString())).join(", ")
                                     }.`));
                             }
                         }
